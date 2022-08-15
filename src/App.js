@@ -1,6 +1,5 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
-import logo from "./logo.svg";
 
 import { Amplify, DataStore, Predicates } from "aws-amplify";
 import { Post, PostStatus } from "./models";
@@ -9,37 +8,50 @@ import { Post, PostStatus } from "./models";
 import awsconfig from "./aws-exports";
 Amplify.configure(awsconfig);
 
+function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+
 function onCreate() {
-  console.log('onCreate')
   DataStore.save(
     new Post({
       title: `New title ${Date.now()}`,
-      rating: (function getRandomInt(min, max) {
-        min = Math.ceil(min);
-        max = Math.floor(max);
-        return Math.floor(Math.random() * (max - min)) + min;
-      })(1, 7),
+      rating: getRandomInt(1, 7),
       status: PostStatus.ACTIVE,
     })
   );
 }
 
+function onDelete(id) {
+  DataStore.delete(Post, id);
+}
+
 function onDeleteAll() {
-  console.log('onDeleteAll')
   DataStore.delete(Post, Predicates.ALL);
 }
 
-async function onQuery() {
-  console.log('onQuery')
-  const posts = await DataStore.query(Post, (c) => c.rating("gt", 4));
-
-  console.log(posts);
-}
 
 function App() {
+  const [posts, setPosts] = useState([])
+
+  async function onQuery() {
+    const posts = await DataStore.query(Post, (c) => c.rating("gt", 4));
+
+    setPosts(posts)
+  }
+
+  async function onUpdate(currentItem) {
+    await DataStore.save(Post.copyOf(currentItem, item => {
+      item.title = `Updated title ${Date.now()}`
+      item.rating = getRandomInt(1, 7)
+    }));
+  }
+
   useEffect(() => {
-    const subscription = DataStore.observeQuery(Post).subscribe((msg) => {
-      console.log(msg);
+    const subscription = DataStore.observeQuery(Post).subscribe((snapshot) => {
+      setPosts(snapshot.items)
     });
 
     return () => subscription.unsubscribe();
@@ -47,25 +59,36 @@ function App() {
 
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <div>
-          <input type="button" value="NEW" onClick={onCreate} />
-          <input type="button" value="DELETE ALL" onClick={onDeleteAll} />
-          <input type="button" value="QUERY rating > 4" onClick={onQuery} />
+        <div style={{"marginTop": "50px"}}>
+          <button onClick={onCreate}>New Record</button>
+          <button onClick={onDeleteAll}>Delete All</button>
+          <button onClick={onQuery}>QUERY rating greater than 4</button>
         </div>
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+
+        <table style={{"width": "80%", "marginTop": "50px"}}>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>Rating</th>
+              <th>Content</th>
+            </tr>
+          </thead>
+          <tbody>
+        {posts.map((post) => (
+          <tr key={post.id}>
+            <td>{post.id}</td>
+            <td>{post.title}</td>
+            <td>{post.rating}</td>
+            <td>{post.content}</td>
+            <td>
+              <button onClick={() => onUpdate(post)}>Update Title and Rating</button>
+              <button onClick={() => onDelete(post.id)}>Delete Item</button>
+            </td>
+          </tr>
+          ))}
+          </tbody>
+        </table>
     </div>
   );
 }
