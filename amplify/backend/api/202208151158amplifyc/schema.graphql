@@ -7,6 +7,6 @@ type Post @model {
 }
 
 enum PostStatus {
-  DRAFT
-  PUBLISHED
+  ACTIVE
+  INACTIVE
 }

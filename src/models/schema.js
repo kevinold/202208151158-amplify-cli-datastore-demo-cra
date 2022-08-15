@@ -71,8 +71,8 @@ export const schema = {
         "PostStatus": {
             "name": "PostStatus",
             "values": [
-                "DRAFT",
-                "PUBLISHED"
+                "ACTIVE",
+                "INACTIVE"
             ]
         }
     },
