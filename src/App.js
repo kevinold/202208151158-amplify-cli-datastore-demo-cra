@@ -32,22 +32,21 @@ function onDeleteAll() {
   DataStore.delete(Post, Predicates.ALL);
 }
 
+async function onQuery(setPosts) {
+  const posts = await DataStore.query(Post, (c) => c.rating("gt", 4));
+
+  setPosts(posts)
+}
+
+async function onUpdate(currentItem) {
+  await DataStore.save(Post.copyOf(currentItem, item => {
+    item.title = `Updated title ${Date.now()}`
+    item.rating = getRandomInt(1, 7)
+  }));
+}
 
 function App() {
   const [posts, setPosts] = useState([])
-
-  async function onQuery() {
-    const posts = await DataStore.query(Post, (c) => c.rating("gt", 4));
-
-    setPosts(posts)
-  }
-
-  async function onUpdate(currentItem) {
-    await DataStore.save(Post.copyOf(currentItem, item => {
-      item.title = `Updated title ${Date.now()}`
-      item.rating = getRandomInt(1, 7)
-    }));
-  }
 
   useEffect(() => {
     const subscription = DataStore.observeQuery(Post).subscribe((snapshot) => {
@@ -62,7 +61,7 @@ function App() {
         <div style={{"marginTop": "50px"}}>
           <button onClick={onCreate}>New Record</button>
           <button onClick={onDeleteAll}>Delete All</button>
-          <button onClick={onQuery}>QUERY rating greater than 4</button>
+          <button onClick={() => onQuery(setPosts)}>QUERY rating greater than 4</button>
         </div>
 
         <table style={{"width": "80%", "marginTop": "50px"}}>
