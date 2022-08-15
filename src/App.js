@@ -10,6 +10,7 @@ import awsconfig from "./aws-exports";
 Amplify.configure(awsconfig);
 
 function onCreate() {
+  console.log('onCreate')
   DataStore.save(
     new Post({
       title: `New title ${Date.now()}`,
@@ -24,10 +25,12 @@ function onCreate() {
 }
 
 function onDeleteAll() {
+  console.log('onDeleteAll')
   DataStore.delete(Post, Predicates.ALL);
 }
 
 async function onQuery() {
+  console.log('onQuery')
   const posts = await DataStore.query(Post, (c) => c.rating("gt", 4));
 
   console.log(posts);
@@ -35,8 +38,8 @@ async function onQuery() {
 
 function App() {
   useEffect(() => {
-    const subscription = DataStore.observe(Post).subscribe((msg) => {
-      console.log(msg.model, msg.opType, msg.element);
+    const subscription = DataStore.observeQuery(Post).subscribe((msg) => {
+      console.log(msg);
     });
 
     return () => subscription.unsubscribe();
