@@ -64,7 +64,7 @@ function App() {
         <Flex>
           <Button onClick={onCreate}>New Record</Button>
           <Button onClick={onDeleteAll}>Delete All</Button>
-          <Button onClick={() => onQuery(setPosts)}>QUERY rating greater TableCellan 4</Button>
+          <Button onClick={() => onQuery(setPosts)}>QUERY rating &#62; 4</Button>
         </Flex>
 
         <Table>
